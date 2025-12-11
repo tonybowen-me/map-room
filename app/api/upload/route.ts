@@ -1,28 +1,26 @@
-import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 
 export async function POST(req: Request) {
   const formData = await req.formData();
-
-  const roomId = formData.get("roomId") as string;
   const file = formData.get("file") as File;
+  const roomId = formData.get("roomId") as string;
 
-  if (!roomId || !file) {
-    return NextResponse.json({ error: "Missing roomId or file" }, { status: 400 });
+  if (!file || !roomId) {
+    return NextResponse.json({ error: "Missing file or roomId" }, { status: 400 });
   }
 
-  const uploadsDir = path.join(process.cwd(), "uploads", roomId);
-
-  await mkdir(uploadsDir, { recursive: true });
-
-  // Read file into buffer
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
 
-  const filePath = path.join(uploadsDir, file.name);
+  // FINAL correct folder
+  const uploadDir = path.join(process.cwd(), "public", "uploads", roomId);
 
-  await writeFile(filePath, buffer);
+  fs.mkdirSync(uploadDir, { recursive: true });
 
-  return NextResponse.json({ success: true, path: `/uploads/${roomId}/${file.name}` });
+  const filePath = path.join(uploadDir, file.name);
+  fs.writeFileSync(filePath, buffer);
+
+  return NextResponse.json({ success: true });
 }

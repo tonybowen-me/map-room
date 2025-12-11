@@ -1,85 +1,137 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
-import { loadRooms, loadDocuments, saveDocuments } from "@/lib/storage";
+import { use, useEffect, useState } from "react";
 
-export default function RoomPage(props) {
-  // Unwrap the params promise
-  const { roomId } = use(props.params);
+export default function RoomPage({
+  params,
+}: {
+  params: Promise<{ roomId: string }>;
+}) {
+  // unwrap next.js params (they are a Promise in client components)
+  const { roomId } = use(params);
 
   const [room, setRoom] = useState<any>(null);
-  const [docs, setDocs] = useState<any[]>([]);
+  const [docs, setDocs] = useState<string[]>([]);
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
+  //
+  // LOAD ROOM DETAILS
+  //
   useEffect(() => {
-    const allRooms = loadRooms();
-    const found = allRooms.find((r: any) => r.id === roomId);
+    const rooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const found = rooms.find((r: any) => r.id === roomId) || null;
     setRoom(found);
-
-    const allDocs = loadDocuments();
-    setDocs(allDocs[roomId] || []);
   }, [roomId]);
 
-const uploadDoc = async (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+  //
+  // LOAD DOCUMENT LIST
+  //
+  useEffect(() => {
+    const fetchDocs = async () => {
+      const res = await fetch(`/api/list-docs/${roomId}`);
+      let data = [];
+      try {
+        data = await res.json();
+      } catch {}
+      setDocs(data);
+    };
 
-  const formData = new FormData();
-  formData.append("roomId", roomId);
-  formData.append("file", file);
+    fetchDocs();
+  }, [roomId]);
 
-  const res = await fetch("/api/upload", {
-    method: "POST",
-    body: formData
-  });
+  //
+  // UPLOAD DOCUMENT
+  //
+  const handleUpload = async () => {
+    if (!file) return;
 
-  const json = await res.json();
-  if (!json.success) {
-    alert("Upload failed");
-    return;
-  }
+    setUploading(true);
 
-  // Refresh document list
-  setDocs(prev => [...prev, { name: file.name, url: json.path }]);
-};
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("roomId", roomId);
 
-  if (!room)
-    return <div className="p-8 text-white">Room not found</div>;
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      setFile(null);
+      setUploading(false);
+
+      // refresh doc listing
+      const docsRes = await fetch(`/api/list-docs/${roomId}`);
+      const docsJson = await docsRes.json();
+      setDocs(docsJson);
+    } catch (err) {
+      console.error("UPLOAD ERROR:", err);
+      setUploading(false);
+    }
+  };
+
+  //
+  // UI
+  //
+  if (!room) return <div>Room not found</div>;
 
   return (
-    <div className="p-8 text-white">
-      <h1 className="text-3xl font-bold mb-2">
-        {room.roomNumber}: {room.roomName}
-      </h1>
+    <div style={{ padding: 20, color: "white" }}>
+      <h1>{room.roomName}</h1>
 
-      <p className="mb-4">{room.description}</p>
+      <p>
+        <strong>Room Number:</strong> {room.roomNumber}
+      </p>
 
-      <h2 className="text-xl font-semibold mb-2">Documents</h2>
+      <p>
+        <strong>Description:</strong> {room.description}
+      </p>
+
+      <hr style={{ margin: "20px 0" }} />
+
+      <h2>Upload Document</h2>
 
       <input
         type="file"
-        onChange={uploadDoc}
-        className="mb-4"
+        onChange={(e) => setFile(e.target.files?.[0] || null)}
       />
 
-      <ul>
+      <button
+        onClick={handleUpload}
+        disabled={uploading || !file}
+        style={{
+          marginLeft: 10,
+          padding: "6px 12px",
+          background: "dodgerblue",
+          border: "none",
+          cursor: "pointer",
+        }}
+      >
+        {uploading ? "Uploading..." : "Upload"}
+      </button>
+
+      <hr style={{ margin: "20px 0" }} />
+
+<h3>Documents</h3>
+
+{docs.length === 0 && <p>No documents uploaded yet.</p>}
+
 <ul>
-  {docs.map((d, i) => (
-    <li key={i} className="mb-2 underline text-blue-400">
-      <a href={d.url} download>{d.name}</a>
+  {docs.map((doc, index) => (
+    <li key={index}>
+      <a 
+        href={doc.url} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        style={{ color: "#4af", textDecoration: "underline" }}
+      >
+        {doc.fileName}
+      </a>
     </li>
   ))}
 </ul>
 
-      </ul>
     </div>
   );
-}
-
-function toBase64(file: File) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 }

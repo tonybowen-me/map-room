@@ -33,7 +33,8 @@ export default function BlueprintEditor() {
   const handleClick = (e: any) => {
     if (!drawingMode) return;
 
-    const rect = e.target.getBoundingClientRect();
+	const svg = e.currentTarget; // always the <svg>
+	const rect = svg.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 

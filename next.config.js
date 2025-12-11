@@ -5,9 +5,9 @@ const nextConfig = {
       {
         source: "/uploads/:path*",
         destination: "/api/uploads/:path*",
-      }
+      },
     ];
-  }
+  },
 };
 
 export default nextConfig;
