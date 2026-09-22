@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Haunt Map 2026 - haunted attractions near Wilmington, DE (19805)</title>
+  <meta name="description" content="Interactive map of 2026 haunted houses, hayrides and scream parks within about an hour of ZIP 19805, plus Field of Screams." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%83%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="pumpkin" viewBox="0 0 64 64" aria-hidden="true"><path d="M30 6c4-3 9-2 11 1-3 0-6 2-7 5l-2 8h-3l1-8c0-3 0-4 0-6z" fill="#3ddc84"/><ellipse cx="32" cy="38" rx="28" ry="22" fill="#ff7a1a"/><ellipse cx="18" cy="38" rx="10" ry="21" fill="#ff8f3a" opacity=".7"/><ellipse cx="46" cy="38" rx="10" ry="21" fill="#e0640f" opacity=".6"/><path d="M18 32l8 6-11 2zM46 32l-8 6 11 2zM17 46c5 6 25 6 30 0l-5 3-4-3-5 4-5-4-4 3-4-3z" fill="#1a0d00"/></svg>
+      <div>
+        <h1>Haunt Map <span>2026</span></h1>
+        <p>Haunted houses, hayrides &amp; scream parks within an hour of Wilmington, DE (19805)</p>
+      </div>
+    </div>
+    <div class="stats" id="stats" aria-live="polite"></div>
+    <div class="topbar-actions">
+      <button id="plan-toggle" class="btn ghost" type="button" title="Build a route through the haunts you pick">
+        Plan a night <span class="pill" id="plan-count">0</span>
+      </button>
+      <button id="share" class="btn ghost" type="button" title="Copy a link to this view">Share link</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="controls">
+        <label class="search">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="search" type="search" placeholder="Search haunts, towns, hayride, indoor..." autocomplete="off" />
+        </label>
+
+        <div class="control">
+          <div class="control-head">
+            <span>Max drive from 19805</span>
+            <strong id="drive-label">60 min</strong>
+          </div>
+          <input id="drive" type="range" min="15" max="90" step="5" value="60" list="drive-ticks" />
+          <datalist id="drive-ticks">
+            <option value="15" label="15"></option>
+            <option value="30" label="30"></option>
+            <option value="45" label="45"></option>
+            <option value="60" label="60"></option>
+            <option value="75" label="75"></option>
+            <option value="90" label="90"></option>
+          </datalist>
+          <div class="ticks"><span>15</span><span>30</span><span>45</span><span>60</span><span>75</span><span>90+</span></div>
+        </div>
+
+        <div class="control">
+          <div class="control-head"><span>Scare level</span><button id="scare-all" class="link" type="button">all</button></div>
+          <div class="chips" id="scare-chips" role="group" aria-label="Scare level">
+            <button type="button" class="chip on extreme" data-scare="extreme"><i></i>Extreme</button>
+            <button type="button" class="chip on scary" data-scare="scary"><i></i>Scary</button>
+            <button type="button" class="chip on moderate" data-scare="moderate"><i></i>Moderate</button>
+            <button type="button" class="chip on family" data-scare="family"><i></i>Family</button>
+          </div>
+        </div>
+
+        <div class="control row">
+          <label class="toggle">
+            <input id="open-tonight" type="checkbox" />
+            <span>Open this weekend</span>
+          </label>
+          <label class="sort">
+            Sort
+            <select id="sort">
+              <option value="drive">closest first</option>
+              <option value="name">A - Z</option>
+              <option value="scare">scariest first</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="list-head">
+        <span id="count"></span>
+        <span class="hint">click a card to fly there</span>
+      </div>
+      <ul id="list" class="cards"></ul>
+
+      <footer class="foot">
+        Drive times routed from 19805 (typical, no traffic). Sources: each haunt's site and the
+        <a href="https://6abc.com/19806078/" target="_blank" rel="noopener">6abc 2026 guide</a>, Sept 2026.
+        Confirm dates &amp; prices before you go.
+      </footer>
+    </aside>
+
+    <main class="map-wrap">
+      <div id="map" role="application" aria-label="Map of haunted attractions"></div>
+
+      <section id="detail" class="detail" hidden aria-live="polite"></section>
+
+      <section id="plan" class="plan" hidden>
+        <div class="plan-head">
+          <h2>Your night</h2>
+          <button class="close" id="plan-close" type="button" aria-label="Close">&times;</button>
+        </div>
+        <p class="muted" id="plan-empty">Add haunts with the <b>+ Add to night</b> button and we'll string them into one route from 19805.</p>
+        <ol id="plan-list"></ol>
+        <div class="plan-foot">
+          <span id="plan-summary"></span>
+          <a id="plan-go" class="btn primary" target="_blank" rel="noopener" hidden>Open route in Google Maps &rarr;</a>
+          <button id="plan-clear" class="link" type="button" hidden>clear</button>
+        </div>
+      </section>
+
+      <div id="toast" class="toast" role="status"></div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="haunts.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

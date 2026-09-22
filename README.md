@@ -1,36 +1,28 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Haunt Map 2026
 
-## Getting Started
+Interactive map of haunted attractions within about an hour's drive of ZIP 19805 (Wilmington, DE) for the 2026 season, plus a few "worth the drive" haunts such as Field of Screams.
 
-First, run the development server:
+Static site: no build step, no dependencies to install. Leaflet is loaded from a CDN.
+
+## Run locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+python3 -m http.server 8000
+# open http://localhost:8000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+(Opening `index.html` directly from disk also works.)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Files
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `index.html` / `styles.css` / `app.js` - the map UI: search, max-drive slider, scare-level chips, "open this weekend" filter, sorting, a details panel per haunt, a "Plan a night" multi-stop route (opens in Google Maps) and shareable URLs (all state lives in the `#hash`).
+- `haunts.js` - the data (20 haunts). Each entry has a routed drive time and distance from 19805 (`driveMin`, `miles` - typical OSRM route, no traffic), a scare level (`extreme | scary | moderate | family`), a `season` date range used by the weekend filter, and the 2026 dates/prices as published in September 2026. Entries with `coordsApprox: true` were pinned from the road/town rather than an exact geocode.
 
-## Learn More
+## Deploy
 
-To learn more about Next.js, take a look at the following resources:
+Pushes to `main` publish to GitHub Pages via `.github/workflows/pages.yml`
+(Settings -> Pages -> Source must be set to "GitHub Actions").
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Adding a haunt
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Append an object to `window.HAUNTS` in `haunts.js` (copy an existing entry; `id` must be unique). Dates and prices change every season - confirm on the attraction's own site before you go.
