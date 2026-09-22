@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Haunt Map 2026 - within an hour of Wilmington, DE</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<aside id="sidebar">
+  <header>
+    <h1>Haunt Map <span>2026</span></h1>
+    <p class="sub">Haunted attractions within ~1 hour of ZIP 19805 (Wilmington, DE), plus a few worth the drive.</p>
+  </header>
+
+  <section class="filters">
+    <input id="search" type="search" placeholder="Search haunts, towns..." aria-label="Search" />
+    <div class="row">
+      <label>Max drive
+        <select id="drive">
+          <option value="30">30 min</option>
+          <option value="45">45 min</option>
+          <option value="60" selected>60 min</option>
+          <option value="999">Everything (incl. Field of Screams)</option>
+        </select>
+      </label>
+    </div>
+    <div class="row chips" id="scare-chips">
+      <button data-scare="extreme" class="on">Extreme</button>
+      <button data-scare="scary" class="on">Scary</button>
+      <button data-scare="moderate" class="on">Moderate</button>
+      <button data-scare="family" class="on">Family</button>
+    </div>
+    <div class="row">
+      <label>Sort
+        <select id="sort">
+          <option value="drive">Drive time</option>
+          <option value="name">Name</option>
+        </select>
+      </label>
+      <span id="count"></span>
+    </div>
+  </section>
+
+  <ul id="list"></ul>
+
+  <footer>
+    Dates &amp; prices gathered Sept 2026 from each haunt's site and the
+    <a href="https://6abc.com/19806078/" target="_blank" rel="noopener">6abc 2026 guide</a>.
+    Drive times are rough estimates from 19805 without traffic - confirm before you go.
+  </footer>
+</aside>
+
+<main id="map" role="application" aria-label="Map of haunted attractions"></main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="haunts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
